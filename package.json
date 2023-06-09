@@ -1,0 +1,30 @@
+{
+  "name": "homebridge-tesy-water-heater",
+  "displayName": "Homebridge Tesy Water Heater",
+  "version": "1.0.1",
+  "description": "Tesy water heater plugin for homebridge: https://github.com/homebridge/homebridge",
+  "license": "MIT",
+  "keywords": [
+    "homebridge-plugin"
+  ],
+  "engines": {
+    "node": ">=18.16.0",
+    "homebridge": ">=1.6.1 "
+  },
+  "author": "Vasil Anagnostos",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vanagnostos/homebridge-tesy-water-heater.git"
+  },
+  "dependencies": {
+    "homebridge-http-base": ">=2.1.6"
+  },
+  "bugs": {
+    "url": "https://github.com/vanagnostos/homebridge-tesy-water-heater/issues"
+  },
+  "homepage": "https://github.com/vanagnostos/homebridge-tesy-water-heater#readme",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
