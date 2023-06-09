@@ -18,7 +18,7 @@ let Service,
 module.exports = function (homebridge) {
   Service        = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
-  homebridge.registerAccessory('homebridge-tesy-water-heater', 'TesyWaterHeater', TesyWaterHeater);
+  homebridge.registerAccessory('tesy-water-heater-homebridge', 'TesyWaterHeater', TesyWaterHeater);
   return TesyWaterHeater;
 };
 
