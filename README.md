@@ -1,11 +1,11 @@
-# tesy-water-heater-homebridge
+# homebridge-water-heater-tesy
 
 #### Homebridge plugin to control a Tesy Water Heater
 
 ## Installation
 
 1. Install [homebridge](https://github.com/homebridge/homebridge#installation-details)
-2. Install this plugin: `npm install -g tesy-water-heater-homebridge`
+2. Install this plugin: `npm install -g homebridge-water-heater-tesy`
 3. Update your `config.json` file (See below).
 
 ## Configuration example

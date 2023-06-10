@@ -5,6 +5,7 @@ const httpBase            = require("homebridge-http-base"),
       infoUrl             = baseUrl + 'api.php?do=get_dev',
       MODE_MANUAL         = 1,
       MODE_ECO            = 5,
+      STATE_IDLE         = 'READY',
       KEY_MODE            = 'mode',
       KEY_CURRENT_SHOWERS = 'cur_shower',
       KEY_TARGET_SHOWERS  = 'ref_shower',
@@ -13,13 +14,15 @@ const httpBase            = require("homebridge-http-base"),
       KEY_STAT            = 'stat';
 
 let Service,
-    Characteristic;
+    Characteristic,
+    CharacteristicEventTypes;
 
 module.exports = function (homebridge) {
-  Service        = homebridge.hap.Service;
-  Characteristic = homebridge.hap.Characteristic;
-  homebridge.registerAccessory('tesy-water-heater-homebridge', 'TesyWaterHeater', TesyWaterHeater);
-  return TesyWaterHeater;
+  Service                  = homebridge.hap.Service;
+  Characteristic           = homebridge.hap.Characteristic;
+  CharacteristicEventTypes = homebridge.hap.CharacteristicEventTypes;
+  homebridge.registerAccessory('homebridge-water-heater-tesy', 'TesyWaterHeater', TesyWaterHeater);
+  //return TesyWaterHeater;
 };
 
 class TesyWaterHeater {
@@ -107,7 +110,6 @@ class TesyWaterHeater {
   refreshTesyWaterHeaterStatus() {
     this.log.debug(`Executing refreshTesyWaterHeaterStatus`);
     this.getDevice((device) => {
-      // FIXME if mode is auto and target < current, set target == current
       this.status = device.DeviceStatus;
       //this.log.debug(`Loaded status`, this.status);
 
@@ -118,12 +120,12 @@ class TesyWaterHeater {
         this.log.info(`Changing CurrentTemperature from ${oldCurrentTemperature} to ${newCurrentTemperature}`);
       }
 
-      const newHeatingThresholdTemperature = parseFloat(this.status[KEY_TARGET_SHOWERS]),
-            oldHeatingThresholdTemperature = this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).value;
-      if (newHeatingThresholdTemperature != oldHeatingThresholdTemperature) {
-        this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).updateValue(newHeatingThresholdTemperature);
-        this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature).updateValue(newHeatingThresholdTemperature);
-        this.log.info(`Changing HeatingThresholdTemperature from ${oldHeatingThresholdTemperature} to ${newHeatingThresholdTemperature}`);
+      const newThresholdTemperature = parseFloat(this.status[KEY_TARGET_SHOWERS]),
+            oldThresholdTemperature = this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).value;
+      if (newThresholdTemperature != oldThresholdTemperature) {
+        this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).updateValue(newThresholdTemperature);
+        this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature).updateValue(newThresholdTemperature);
+        this.log.info(`Changing ThresholdTemperature from ${oldThresholdTemperature} to ${newThresholdTemperature}`);
       }
 
       const newHeaterActiveStatus = this.getTesyWaterHeaterActiveState(this.status[KEY_POWER]),
@@ -173,6 +175,18 @@ class TesyWaterHeater {
     callback(null, currentTemperature);
   }
 
+  getThresholdTemperature(callback) {
+    this.log.debug(`Executing getThresholdTemperature`);
+    if (!this.status) {
+      this.log.debug(`Status not loaded`);
+      callback(null, this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).value);
+      return;
+    }
+    const currentThresholdTemperature = parseFloat(this.status[KEY_TARGET_SHOWERS]);
+    this.log.debug(`CurrentThresholdTemperature is: ${currentThresholdTemperature}`);
+    callback(null, currentThresholdTemperature);
+  }
+
   getTargetHeaterCoolerState(callback) {
     this.log.debug(`Executing getTargetHeaterCoolerState`);
     if (!this.status) {
@@ -218,7 +232,7 @@ class TesyWaterHeater {
       value = this.maxTemp;
     }
 
-    this.log.debug(`Executing setHeatingThresholdTemperature with value: ${value}`);
+    this.log.debug(`Executing setThresholdTemperature with value: ${value}`);
 
     const url = baseUrl + 'api.php?cmd=apiv1&name=tmpT&set=' + value + '&id=' + this.device_id;
 
@@ -227,14 +241,6 @@ class TesyWaterHeater {
     this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature).updateValue(value);
     this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature).updateValue(value);
     this.status[KEY_TARGET_SHOWERS] = value;
-  }
-
-  setHeatingThresholdTemperature(value, callback) {
-    this.setThresholdTemperature(value, callback);
-  }
-
-  setCoolingThresholdTemperature(value, callback) {
-    this.setThresholdTemperature(value, callback);
   }
 
   getName(callback) {
@@ -249,6 +255,9 @@ class TesyWaterHeater {
 
   // noinspection JSUnusedGlobalSymbols
   getServices() {
+
+    // FIXME move this to constructor
+
     this.informationService = new Service.AccessoryInformation();
     this.service            = new Service.HeaterCooler(this.name);
 
@@ -263,13 +272,13 @@ class TesyWaterHeater {
 
     this.service
       .getCharacteristic(Characteristic.Name)
-      .on('get', this.getName.bind(this));
+      .on(CharacteristicEventTypes.GET, this.getName.bind(this));
 
     ////////////
 
     this.service.getCharacteristic(Characteristic.Active)
-      .on('get', this.getActive.bind(this))
-      .on('set', this.setActive.bind(this));
+      .on(CharacteristicEventTypes.GET, this.getActive.bind(this))
+      .on(CharacteristicEventTypes.SET, this.setActive.bind(this));
 
     ////////////
 
@@ -288,15 +297,15 @@ class TesyWaterHeater {
 
     this.service
       .getCharacteristic(Characteristic.TargetHeaterCoolerState)
-      .on('get', this.getTargetHeaterCoolerState.bind(this))
-      .on('set', this.setTargetHeaterCoolerState.bind(this));
+      .on(CharacteristicEventTypes.GET, this.getTargetHeaterCoolerState.bind(this))
+      .on(CharacteristicEventTypes.SET, this.setTargetHeaterCoolerState.bind(this));
 
     ////////////
 
-    // CharacteristicEventTypes.GET / SET - FIXME
-
     this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature)
-      .on('set', this.setHeatingThresholdTemperature.bind(this));
+      .on(CharacteristicEventTypes.GET, this.getThresholdTemperature.bind(this))
+      .on(CharacteristicEventTypes.SET, this.setThresholdTemperature.bind(this));
+
 
     this.service.getCharacteristic(Characteristic.HeatingThresholdTemperature)
       .setProps({
@@ -308,7 +317,8 @@ class TesyWaterHeater {
     ////////////
 
     this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature)
-      .on('set', this.setCoolingThresholdTemperature.bind(this));
+      .on(CharacteristicEventTypes.GET, this.getThresholdTemperature.bind(this))
+      .on(CharacteristicEventTypes.SET, this.setThresholdTemperature.bind(this));
 
     this.service.getCharacteristic(Characteristic.CoolingThresholdTemperature)
       .setProps({
@@ -320,7 +330,7 @@ class TesyWaterHeater {
     ////////////
 
     this.service.getCharacteristic(Characteristic.CurrentTemperature)
-      .on('get', this.getCurrentTemperature.bind(this));
+      .on(CharacteristicEventTypes.GET, this.getCurrentTemperature.bind(this));
 
     this.service.getCharacteristic(Characteristic.CurrentTemperature)
       .setProps({
@@ -450,7 +460,7 @@ class TesyWaterHeater {
   }
 
   getTesyWaterHeaterCurrentHeaterCoolerState(state) {
-    if (state.toUpperCase() === 'READY') { // FIXME
+    if (state.toUpperCase() === STATE_IDLE) {
       return Characteristic.CurrentHeaterCoolerState.IDLE;
     } else {
       return Characteristic.CurrentHeaterCoolerState.HEATING;

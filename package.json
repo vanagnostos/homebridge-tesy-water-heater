@@ -1,7 +1,7 @@
 {
-  "name": "tesy-water-heater-homebridge",
+  "name": "homebridge-water-heater-tesy",
   "displayName": "Homebridge Tesy Water Heater",
-  "version": "1.0.3-beta.0",
+  "version": "1.0.4-beta.0",
   "description": "Tesy water heater plugin for homebridge: https://github.com/homebridge/homebridge",
   "license": "MIT",
   "keywords": [
@@ -25,7 +25,8 @@
   "homepage": "https://github.com/vanagnostos/homebridge-tesy-water-heater#readme",
   "main": "index.js",
   "devDependencies": {
-    "hap-nodejs": "^0.11.1"
+    "hap-nodejs": "^0.11.1",
+    "homebridge": "^1.6.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
