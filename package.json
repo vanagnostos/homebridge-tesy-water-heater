@@ -1,11 +1,14 @@
 {
   "name": "homebridge-water-heater-tesy",
   "displayName": "Homebridge Tesy Water Heater",
-  "version": "1.0.4-beta.0",
+  "version": "1.0.5-beta.0",
   "description": "Tesy water heater plugin for homebridge: https://github.com/homebridge/homebridge",
   "license": "MIT",
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "bellislimo",
+    "tesy",
+    "tesycloud"
   ],
   "engines": {
     "node": ">=18.16.0",
